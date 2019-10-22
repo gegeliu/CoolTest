@@ -42,7 +42,7 @@ import com.ipgou.coolsdk.Coolpay;
   Coolpay.Config....
   // 监听支付结果
   pay.setResultListener(new Coolpay.ResultListener() {
-      ...
+      ...});
    // 支付
    Map<String, String> payInfo = new HashMap<String, String>();
    payInfo.put("amount","20000");
