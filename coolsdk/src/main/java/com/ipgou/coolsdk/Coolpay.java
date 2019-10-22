@@ -92,17 +92,23 @@ public class Coolpay {
     /*
      *   检查参数有效性
      */
-    public boolean check( boolean pay ) {
+    public boolean check( int type ) {
         if( Config.mch_id.isEmpty()  || Config.api_key.isEmpty())
             return false;
-        if( pay ) {
+        if( 0 == type ) {
             if( Config.pay_url.isEmpty() ||
                     Config.pay_channel.isEmpty() || Config.pay_currency.isEmpty() )
                 return false;
         }
-        else { // query
+        else if( 1 == type ){ // query
             if( Config.query_url.isEmpty() ) {
                 Log.e(TAG,"query_url is empty!!!");
+                return false;
+            }
+        }
+        else if( 2 == type ){ //
+            if( Config.txn_url.isEmpty() ) {
+                Log.e(TAG,"txn_url is empty!!!");
                 return false;
             }
         }
@@ -244,10 +250,10 @@ public class Coolpay {
      * @param payInfo
      * @return
      */
-    private Bundle doPay(  Map<String, String> payInfo ) {
+    private Bundle doPay(  Map<String, String> payInfo,boolean req_txnno ) {
         Bundle bundle = null;
         try {
-            if( !check(true) ){
+            if( !check(req_txnno?2:0) ){
                 Log.e(TAG,"check pay param error!!!");
                 return bundle;
             }
@@ -275,7 +281,8 @@ public class Coolpay {
                  }
              }
              */
-            JSONObject json = doHttp(Config.pay_url,mapAll);
+            String url = req_txnno?Config.txn_url:Config.pay_url;
+            JSONObject json = doHttp(url,mapAll);
             if( null != json && !json.isNull("code" ) ) {
                 bundle = new Bundle();
                 int code = json.getInt("code");
@@ -305,7 +312,6 @@ public class Coolpay {
     class MapKeyComparator implements Comparator<String> {
         @Override
         public int compare(String str1, String str2) {
-
             return str1.compareTo(str2);
         }
     }
@@ -363,7 +369,7 @@ public class Coolpay {
     private Bundle doQuery( String trn_no ) {
         Bundle bundle = null;
         try {
-            if( !check(false) ){
+            if( !check(1) ){
                 Log.e(TAG,"check query param error!!!");
                 return bundle;
             }
@@ -415,19 +421,41 @@ public class Coolpay {
     /*
      * 客户端支付模式
      */
-    public boolean payV1( final Map<String, String> payInfo ) {
-        if( !check(true) ||
+    public boolean payV1( Map<String, String> payInfo ) {
+        if( !check(0) ||
                 !payInfo.containsKey("amount") ||
                 !payInfo.containsKey("msisdn") ||
                 !payInfo.containsKey("order_no") ){
             Log.e(TAG,"pay error invalid param");
             return false;
         }
+        return pay(payInfo,false);
+    }
+
+    /*
+     * 客户端支付模式
+     */
+    public boolean payV2( Map<String, String> payInfo ) {
+        if( !check(2) ||
+                !payInfo.containsKey("amount") ||
+                !payInfo.containsKey("order_no") ){
+            Log.e(TAG,"pay error invalid param");
+            return false;
+        }
+        return pay(payInfo,true);
+    }
+
+    /**
+     *  内部支付
+     * @param payInfo
+     * @return
+     */
+    private boolean pay( final Map<String, String> payInfo,final boolean req_txnno ) {
         Runnable payRunnable = new Runnable() {
             @Override
             public void run() {
                 // 构造PayTask 对象
-                Bundle bundle = doPay(payInfo);
+                Bundle bundle = doPay(payInfo,req_txnno);
                 Message msg = new Message();
                 msg.what = Config.SDK_PAY;
                 msg.setData(bundle);
@@ -495,7 +523,15 @@ public class Coolpay {
          * 服务器查询面路径
          */
         public static String query_url;
+        /**
+         *  web模式获取订单号路径
+         */
+        public static String txn_url;
 
+        /**
+         *  web 模式支付url
+         */
+        public static String web_url;
         /**
          * 服务器通知url 通常后台预配置 sdk 暂不提供此接口
          */
