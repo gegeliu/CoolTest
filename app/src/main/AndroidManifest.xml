@@ -26,7 +26,8 @@
         <activity
             android:name=".WebActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:screenOrientation="sensor"/>
+            android:screenOrientation="sensor"
+            android:theme="@style/WebViewTheme"/>
 
     </application>
 

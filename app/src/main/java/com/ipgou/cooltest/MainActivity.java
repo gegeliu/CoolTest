@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        App.getApp().setContext(this);
 
         Log.i(TAG,"oncreate ok threadid " + Thread.currentThread().getId());
         // 允许主线程 启用网络
@@ -93,7 +94,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                     break;
                     case 10:{
-                        myClass.mPD.hide();;
+                        if( null !=  myClass.mPD )
+                            myClass.mPD.hide();;
                     }
                     break;
                     default:
@@ -131,15 +133,17 @@ public class MainActivity extends AppCompatActivity {
     private void test( int what ) {
         final Activity activity = this;
         if( 2 == what ) { // web 模式
+           // Coolpay.Config.web_url = "https://www.baidu.com?";
+           // doWeb("aa");
             testweb( );
             return;
         }
         if( null == mPD ) {
-            mPD = ProgressDialog.show(MainActivity.this, "状态", "正则支付……");
+            mPD = ProgressDialog.show(MainActivity.this, "状态", "正在支付……");
         }
         else {
             mPD.setTitle("状态");
-            mPD.setMessage("正则支付……");
+            mPD.setMessage("正在支付……");
             mPD.show();
         }
         Coolpay pay =  Coolpay.getInstance(activity);
